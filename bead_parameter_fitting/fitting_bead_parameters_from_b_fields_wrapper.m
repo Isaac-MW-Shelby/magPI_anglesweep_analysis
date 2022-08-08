@@ -77,7 +77,7 @@ if isfield(data, 'precisions_uT')
     
 else
     measured_field_precisions_mT = ...
-        ones(size(measured_b_fields))*0.002; %mT, 2uT is from experimental data
+        ones(size(measured_b_fields))*0.001; %mT, 1uT is from experimental data
 end
 
 

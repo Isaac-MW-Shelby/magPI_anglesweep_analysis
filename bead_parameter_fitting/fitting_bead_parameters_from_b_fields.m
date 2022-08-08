@@ -179,6 +179,9 @@ function [bead_parameter_output, precisions] = fitting_bead_parameters_from_b_fi
 
         xx = xx - mean(xx(:));
         yy = yy - mean(yy(:));
+        
+%         xx = xx - bead_params(1)/pixel_side_length;
+%         yy = yy - bead_params(2)/pixel_side_length;
 
         [mask_xgrid, mask_ygrid] = meshgrid(xx, yy);
 

@@ -4,6 +4,9 @@
 
 current_folder_full_path = pwd;
 
+
+
+
 location_of_slashes = find(current_folder_full_path == '/');
 
 location_of_last_slash = location_of_slashes(end);
@@ -115,4 +118,6 @@ end
 %% plot rotation sequence (just fields)
 
 %% plot rotation sequence (with overlaid projected bead moment and applied field)
+
+
 

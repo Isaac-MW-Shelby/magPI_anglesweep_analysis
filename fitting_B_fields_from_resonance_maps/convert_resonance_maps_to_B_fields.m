@@ -11,6 +11,8 @@ debug = true;
 
 work_computer = true;
 
+convert_sensitivities_to_precisions = true;
+
 if work_computer
     slash = '/';
 else 
@@ -148,38 +150,47 @@ end
 
 %% loading in matrices outputs for sensitivities to give precisions
 
-extra_matrix_directory = dir('*magangle*');
 
-num_angles = size_shift_data(1);
+if convert_sensitivities_to_precisions
 
-precisions_uT = zeros([size_shift_data(1:3) 3]);
-
-pulled_angles = zeros(1, size_shift_data(1));
-
-
-for i = 1:num_angles
+    extra_matrix_directory = dir('*magangle*');
     
-   matrix_filename = extra_matrix_directory(i).name;
-   load(matrix_filename);
-   
-   angle_of_mat_str = extractAfter(matrix_filename, 'magangle');
-   angle_of_mat = round(str2num(angle_of_mat_str(1:end-4))); %#ok<ST2NM>
-   
-   
-   
-   matrix_angle_index = find(angle_of_mat == round(angle_space));
-   
-   pulled_angles(matrix_angle_index) = angle_of_mat;
-   
-   conversion_factor = (10^6)*0.55/0.6679; 
-   % converts GHz/sqrt(Hz) (sens) -> kHz/sqrt(Hz) (sens) -> uT (precision)
-   % .55 uT for .6679 kHz/sqrt(Hz) found phemonenologically from empty FOV
-   
-   for j = 1:3
-       
-       precisions_uT(i, :, :, j) = conversion_factor*c.sensitivities;
-   
-   end
+    num_angles = size_shift_data(1);
+    
+    precisions_uT = zeros([size_shift_data(1:3) 3]);
+    
+    pulled_angles = zeros(1, size_shift_data(1));
+    
+    
+    for i = 1:num_angles
+        
+        matrix_filename = extra_matrix_directory(i).name;
+        load(matrix_filename);
+        
+        angle_of_mat_str = extractAfter(matrix_filename, 'magangle');
+        angle_of_mat = round(str2num(angle_of_mat_str(1:end-4))); %#ok<ST2NM>
+        
+        
+        
+        matrix_angle_index = find(angle_of_mat == round(angle_space));
+        
+        pulled_angles(matrix_angle_index) = angle_of_mat;
+        
+        conversion_factor = (10^6)*0.55/0.6679;
+        % converts GHz/sqrt(Hz) (sens) -> kHz/sqrt(Hz) (sens) -> uT (precision)
+        % .55 uT for .6679 kHz/sqrt(Hz) found phemonenologically from empty FOV
+        
+        for j = 1:3
+            
+            precisions_uT(i, :, :, j) = conversion_factor*c.sensitivities;
+            
+        end
+    end
+
+else
+    
+    precisions_uT = 0.6*ones([size_shift_data(1:3) 3]); % 0.6 uT is from experiment
+    
 end
 
 %% generates parent folder and moves data to that

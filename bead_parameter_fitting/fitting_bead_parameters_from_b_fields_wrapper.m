@@ -1,13 +1,15 @@
 function [bead_parameters] = ...
     fitting_bead_parameters_from_b_fields_wrapper(...
-    angle_sweep_location, angle_index_input)
+    angle_sweep_location, angle_index_input, varinput)
 
 %% function "inputs" (not changed as often as those left as real inputs)
+
+dummy_var = varinput;
 
 do_save = true; % save the output/figures from this fit 
 
 % fit with a fixed z height (useful debugging tool and for large beads)
-fixed_z_fitting = true; 
+fixed_z_fitting = false; 
 
 rescale_data_to_fit = false; % rescales data and simulation -1 -> 1
 
@@ -15,12 +17,14 @@ debug = false; % additional figures/outputs for debugging
 
 medfilt_data = false; % median filter data before fitting
 
+using_turbobeads = true;
+
 % mask out center region
 
 mask_max_dist = 100;
-mask_min_dist = 6;
+mask_min_dist = 2;
 
-bead_z = -1300; % nm, for fixed z fitting 
+bead_z = -200; % nm, for fixed z fitting 
 gradient_value = 0.04; % in uT per nm, gradient at which signal lose occurs
 step_size = 560; % nm, pixel
 pixel_side_length = step_size;
@@ -30,6 +34,8 @@ mT_to_uT = 1000; % fun to code in numbers =)
 figure_tracking_number = 1; % starts tracking figure numbers
 
 linux_computer = true; % to use slashes correctly! 
+
+bead_z = -abs(varinput);
 
 %% load in data 
 
@@ -55,7 +61,7 @@ applied_field_uT = squeeze(data.mean_fields_uT(angle_index, :));
 
 %[measured_b_fields, ~] = center_Bxyz_in_uT_image(measured_b_fields);
 
-input_sidelength = 50;
+input_sidelength = 25;
 edge_cropping = 0;
 [measured_b_fields, ~, xrange_of_centered, yrange_of_centered] = ...
     center_Bxyz_in_uT_image_fixed_size(measured_b_fields, ...
@@ -132,7 +138,15 @@ bead_parameters(6) = bead_m;
 
 %% plot data to fit (commented out right now)
 
-caxis_lim = 6;
+
+
+if using_turbobeads
+    caxis_lim = 2;
+else
+    caxis_lim = 6;
+end
+
+
 
 caxis_min = -caxis_lim;
 caxis_max = caxis_lim;
@@ -597,7 +611,7 @@ if do_save
             filetype = filetype_list{j};
         
             full_save_string = [bead_parameter_fit_folder_figures slash ...
-                 filetype slash fig_title];
+                 filetype slash fig_title modification_suffix];
             doPageFormat(2*[5,3]);
         
             full_save_string = replace(full_save_string, '.', 'point');

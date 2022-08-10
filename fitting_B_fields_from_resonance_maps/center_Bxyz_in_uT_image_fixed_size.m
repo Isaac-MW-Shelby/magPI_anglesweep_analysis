@@ -4,8 +4,11 @@ function [centered_Bxyz, sidelength, xrange, yrange] = ...
 
     debug = false;
     
-
+    % for larger beads
     signal_threshold = 2.5; %uT
+    
+    % for turbobeads
+    signal_threshold = 0.4; % uT
     
     
     Bx = Bxyz_in_uT(1+edge_cropping:end-edge_cropping,1+edge_cropping:end-edge_cropping,1);

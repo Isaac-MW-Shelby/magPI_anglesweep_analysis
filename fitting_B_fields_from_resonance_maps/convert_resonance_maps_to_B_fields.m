@@ -13,6 +13,8 @@ work_computer = true;
 
 convert_sensitivities_to_precisions = true;
 
+turbobead_data = true;
+
 if work_computer
     slash = '/';
 else 
@@ -532,8 +534,16 @@ for i = 1:size(per_pixel_B_fields,1)
     
     magnitude = (Bx.^2 + By.^2 + Bz.^2).^(1/2);
     
-    caxis_range = [-200 200]/ kHz_per_uT; % converted to uT
-    magnitude_caxis_range = [0 300] / kHz_per_uT; % converted to uT
+    
+    if turbobead_data
+        caxis_range = [-56 56]/ kHz_per_uT; % converted to uT
+        magnitude_caxis_range = [0 100] / kHz_per_uT; % converted to uT
+    else
+        caxis_range = [-200 200]/ kHz_per_uT; % converted to uT
+        magnitude_caxis_range = [0 300] / kHz_per_uT; % converted to uT
+    end
+    
+    
     
     current_fig = figure(figure_number_tracker);
     figure_number_tracker = figure_number_tracker + 1;

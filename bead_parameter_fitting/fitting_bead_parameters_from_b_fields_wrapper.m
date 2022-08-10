@@ -315,11 +315,27 @@ rescale_vector = [x_rescale y_rescale z_rescale theta_rescale phi_rescale m_resc
     front_binning_matrix, back_binning_matrix, fixed_z_fitting, ...
     mask_max_dist, mask_min_dist, debug);
 
+% levenburg marquardt (sp?) algorithm doesnt allow bounds, this restricts
+% the angles and moment magnitude accordingly after the fit
+
+% restrict angles between 0 and 2pi
+bead_parameter_fits(4) = mod(bead_paramter_fits(4), 2*pi);
+bead_parameter_fits(5) = mod(bead_parameter_fits(5), 2*pi);
+
+% restrict theta between 0 and pi
+if bead_paramter_fits(4) > pi
+   bead_parameter_fits(4) = 2*pi - bead_parameter_fits(4); 
+   bead_parameter_fits(5) = mod(bead_parameter_fits(5)+pi, 2*pi); 
+end
+
+% restrict 
 if sign(bead_parameter_fits(6)) < 0
     bead_parameter_fits(6) = -bead_parameter_fits(6);
     bead_parameter_fits(4) = pi - bead_parameter_fits(4);
-    bead_parameter_fits(5) = mod(bead_parameter_fits(5) + pi, 2*pi);
+    bead_parameter_fits(5) = mod(bead_parameter_fits(5)+pi, 2*pi);
 end
+
+
 
 % disp('simulation parameters')
 % bead_parameters(1:5)

@@ -111,6 +111,9 @@ if ~exist(full_sweepfit_filename, 'file')
     cd(current_folder_full_path)    
     
     save(data_save_file_name, 'data');
+    
+else
+    load(full_sweepfit_filename)
 end
 
 %% plot bead moment and applied field over rotation
@@ -277,7 +280,7 @@ c = colorbar;
 ylabel(c, 'By (\muT)');
 caxis(caxis_range)
 
-xticks(1+floor(fit_sidelength/2):fit_sidelength:floor((num_angles+1/2)*fit_sidelength))
+xticks(1+floor(fit_sidelength/2):fit_sidelength:floor((num_fits+1/2)*fit_sidelength))
 
 set(gca,'TickLength',[0, 0])
 xticklabels(arrayfun(@num2str, data.angles', 'UniformOutput', 0))
@@ -421,7 +424,7 @@ c = colorbar;
 ylabel(c, 'By (\muT)');
 caxis(caxis_range)
 
-xticks(1+floor(fit_sidelength/2):fit_sidelength:floor((num_angles+1/2)*fit_sidelength))
+xticks(1+floor(fit_sidelength/2):fit_sidelength:floor((num_fits+1/2)*fit_sidelength))
 
 set(gca,'TickLength',[0, 0])
 xticklabels(arrayfun(@num2str, data.angles', 'UniformOutput', 0))
@@ -430,7 +433,7 @@ title([component_string ' rotation sequence (filtered)'])
 yticks([])
 rectangle('Position', [5, 5, 10, 1], 'EdgeColor', 'k', 'FaceColor', 'k')
 
-frame_centers = 1+floor(fit_sidelength/2):fit_sidelength:floor((num_angles+1/2)*fit_sidelength);
+frame_centers = 1+floor(fit_sidelength/2):fit_sidelength:floor((num_fits+1/2)*fit_sidelength);
 
 for k = 1:3
     subplot(3,1,k)

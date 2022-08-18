@@ -462,3 +462,5 @@ for k = 1:3
     legend({'magnetic moment projection', 'applied magnetic field projection'}, 'Location', 'southoutside')
 end
 
+%% saving the figures that were generated
+

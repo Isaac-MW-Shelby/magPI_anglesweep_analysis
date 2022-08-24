@@ -24,7 +24,7 @@ function [bead_parameter_output, precisions] = fitting_bead_parameters_from_b_fi
     
     % set by size of bead and DNA strand
     z_lb = 0;
-    z_ub = 600;
+    z_ub = -600;
     
     
     % angles 
@@ -34,12 +34,13 @@ function [bead_parameter_output, precisions] = fitting_bead_parameters_from_b_fi
     phi_ub = realmax;
     
     moment_lb = 0;
-    moment_ub = 10*max(measured_fields(:))*(z_ub)^3;
+    moment_ub = 2E6;
     
-    
-    if options.Algorithm == 'levenberg-marquardt'
-        lb = [];
-        ub = [];
+    if isfield(options, 'Algorithm')
+        if strcmp(options.Algorithm,'levenberg-marquardt')
+            lb = [];
+            ub = [];
+        end
     else
         lb = [x_lb y_lb z_lb theta_lb phi_lb moment_lb] ./ rescale_vector;
         ub = [x_ub y_ub z_ub theta_ub phi_ub moment_ub] ./ rescale_vector;

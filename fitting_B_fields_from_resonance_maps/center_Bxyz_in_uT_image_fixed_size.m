@@ -18,7 +18,7 @@ function [centered_Bxyz, sidelength, xrange, yrange] = ...
 
     xy_size = size(Bx,1);
     
-    medfilt_size = 6;
+    medfilt_size = 10;
     
     B_mag = (Bx.^2 + By.^2 + Bz.^2).^2;
     

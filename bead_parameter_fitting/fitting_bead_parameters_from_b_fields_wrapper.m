@@ -1,10 +1,8 @@
-function [bead_parameters] = ...
+function [bead_parameter_fits] = ...
     fitting_bead_parameters_from_b_fields_wrapper(...
     angle_sweep_location, angle_index_input, varinput)
 
 %% function "inputs" (not changed as often as those left as real inputs)
-
-dummy_var = varinput;
 
 do_save = true; % save the output/figures from this fit 
 
@@ -19,23 +17,32 @@ medfilt_data = false; % median filter data before fitting
 
 using_turbobeads = true;
 
-% mask out center region
+% donut mask data compared to simulated in fit
 
 mask_max_dist = 100;
-mask_min_dist = 2;
+mask_min_dist = 0;
 
-bead_z = -200; % nm, for fixed z fitting 
-gradient_value = 0.04; % in uT per nm, gradient at which signal lose occurs
+bead_z = -800; % nm, for fixed z fitting 
+gradient_value = varinput; % 0.04; % in uT per nm, gradient at which signal lose occurs
 step_size = 560; % nm, pixel
 pixel_side_length = step_size;
-nvDepth = 75; % nm, depth of NV layer from the surface of the diamond 
+nvDepth = 75; % nm, depth of center of NV layer from the surface of the diamond 
 mT_to_uT = 1000; % fun to code in numbers =)
 
 figure_tracking_number = 1; % starts tracking figure numbers
 
+% for when stepping over a variable and want plots to stay
+% varinput_step = 0.002;
+% figure_tracking_number = round(varinput/varinput_step)+1;
+
+figure_tracking_number_start = figure_tracking_number;
+
 linux_computer = true; % to use slashes correctly! 
 
-bead_z = -abs(varinput);
+% for when using varinput to control fixed z height (or initial z guess)
+% bead_z = -abs(varinput);
+
+mT_nmcubed_per_femu = 1E5;
 
 %% load in data 
 
@@ -61,7 +68,7 @@ applied_field_uT = squeeze(data.mean_fields_uT(angle_index, :));
 
 %[measured_b_fields, ~] = center_Bxyz_in_uT_image(measured_b_fields);
 
-input_sidelength = 25;
+input_sidelength = 15;
 edge_cropping = 0;
 [measured_b_fields, ~, xrange_of_centered, yrange_of_centered] = ...
     center_Bxyz_in_uT_image_fixed_size(measured_b_fields, ...
@@ -111,49 +118,23 @@ for i = 1:size(back_binning_matrix,2)
     back_binning_matrix( region_of_ones, i) = ones(length(region_of_ones), 1);
 end
 
-%% initial guess
-
-bead_parameters = zeros(1,6);
-bead_x = 0; % nm
-bead_y = 0; % nm
-radian_offset = 15*pi/180;
-bead_theta = pi/2 - radian_offset;
-
-
-% applied field from 010422_r31 at MT_theta = 0
-applied =  1.0e+04 * [-0.8981    4.2156    1.1702];
-
-% bead_phi = pi/2+pi/8;
-bead_phi = atan(-applied(1) / applied(2)) + pi/2; 
-
-bead_m = 7*10^8; % mu0/4pi*moment mag in mT nm^3
-% (mu_0/4pi)*10^-15 Am^2 is equal to 10^8 mT nm^3 in these units
-
-bead_parameters(1) = bead_x;
-bead_parameters(2) = bead_y;
-bead_parameters(3) = bead_z;
-bead_parameters(4) = bead_theta;
-bead_parameters(5) = bead_phi;
-bead_parameters(6) = bead_m;
-
 %% plot data to fit (commented out right now)
 
 
-
-if using_turbobeads
-    caxis_lim = 2;
-else
-    caxis_lim = 6;
-end
-
-
-
-caxis_min = -caxis_lim;
-caxis_max = caxis_lim;
+% if using_turbobeads
+%     caxis_lim = 2;
+% else
+%     caxis_lim = 6;
+% end
+% 
+% 
+% 
+% caxis_min = -caxis_lim;
+% caxis_max = caxis_lim;
 
 % figure()
 % 
-% subplot(2,3,1)
+% subplot(2,2,1)
 % imagesc((squeeze(measured_b_fields(:, :, 1)))*mT_to_uT)
 % title(['centered Bx mt_angle = ' num2str(mt_angle)])
 % colorbar
@@ -163,7 +144,7 @@ caxis_max = caxis_lim;
 % yticklabels({''})
 % caxis([caxis_min caxis_max])
 % 
-% subplot(2,3,2)
+% subplot(2,2,2)
 % imagesc((squeeze(measured_b_fields(:, :, 2)))*mT_to_uT)
 % title('centered By')
 % colorbar
@@ -173,39 +154,9 @@ caxis_max = caxis_lim;
 % yticklabels({''})
 % caxis([caxis_min caxis_max])
 % 
-% subplot(2,3,3)
+% subplot(2,2,3)
 % imagesc((squeeze(measured_b_fields(:, :, 3)))*mT_to_uT)
 % title('centered Bz')
-% colorbar
-% colormap(linspecer)
-% pbaspect([1 1 1])
-% xticklabels({''})
-% yticklabels({''})
-% caxis([caxis_min caxis_max])
-% 
-% subplot(2,3,4)
-% imagesc((squeeze(intermediate_data(:, :, 1))))
-% title('Bx thresholded')
-% colorbar
-% colormap(linspecer)
-% pbaspect([1 1 1])
-% xticklabels({''})
-% yticklabels({''})
-% caxis([caxis_min caxis_max])
-% 
-% subplot(2,3,5)
-% imagesc((squeeze(intermediate_data(:, :, 2))))
-% title('By thresholded')
-% colorbar
-% colormap(linspecer)
-% pbaspect([1 1 1])
-% xticklabels({''})
-% yticklabels({''})
-% caxis([caxis_min caxis_max])
-% 
-% subplot(2,3,6)
-% imagesc((squeeze(intermediate_data(:, :, 3))))
-% title('Bz thresholded')
 % colorbar
 % colormap(linspecer)
 % pbaspect([1 1 1])
@@ -273,27 +224,12 @@ initial_guess(2) = 0; % nm from center of FOV
 initial_guess(3) = bead_z; % nm above the surface (z=0)
 initial_guess(4) = pi / 2; % radians
 initial_guess(5) = pi; % radians 
-initial_guess(6) = 50*max(measured_b_fields(:)) * abs(initial_guess(3))^3; % in mT nm^3
 
-title_check = '020822_E1421_r1';
-
-if length(data_file_name) == length(title_check)
-
-    if data_file_name == title_check
-        
-        initial_guess(1) = -513; % nm from center of FOV
-        initial_guess(2) = 185; % nm from center of FOV
-        initial_guess(3) = bead_z; % nm above the surface (z=0)
-        initial_guess(4) = 1.1; % radians
-        initial_guess(5) = 1.9; % radians
-        initial_guess(6) = 1.85*10^9; % in mT nm^3
-        
-    end
+if using_turbobeads
+    initial_guess(6) = 2E7; % in mT nm^3 (1E5 of this is 1 femu)
+else
+    initial_guess(6) = 2E9; % in mT nm^3 (1E5 of this is 1 femu)
 end
-
-% initial_guess = bead_parameters;
-
-%initial_guess = fit_data.bead_parameter_fits;
 
 %% does the fit
 
@@ -302,7 +238,12 @@ y_rescale = 100;
 z_rescale = 100;
 theta_rescale = 1;
 phi_rescale = 1;
-m_rescale = 10^8;
+
+if using_turbobeads
+    m_rescale = 10^7; 
+else
+    m_rescale = 10^8; %#ok<UNRCH>
+end
 
 rescale_vector = [x_rescale y_rescale z_rescale theta_rescale phi_rescale m_rescale];
 
@@ -328,7 +269,7 @@ if bead_parameter_fits(4) > pi
    bead_parameter_fits(5) = mod(bead_parameter_fits(5)+pi, 2*pi); 
 end
 
-% restrict 
+% restrict m to be positive
 if sign(bead_parameter_fits(6)) < 0
     bead_parameter_fits(6) = -bead_parameter_fits(6);
     bead_parameter_fits(4) = pi - bead_parameter_fits(4);
@@ -336,26 +277,16 @@ if sign(bead_parameter_fits(6)) < 0
 end
 
 
-
-% disp('simulation parameters')
-% bead_parameters(1:5)
-% disp('fits parameters')
-% bead_parameter_fits(1:5)
-% disp('fits precisions')
-% bead_parameter_fit_precisions(1:5)
-% 
-% disp('simulation parameters')
-% bead_parameters(6)
-% disp('fits parameters')
-% bead_parameter_fits(6)
-% disp('fits precisions')
-% bead_parameter_fit_precisions(6)
-
+disp(['gradient mask val = ' num2str(gradient_value) ' uT/nm'])
+disp(['fit x = ' num2str(bead_parameter_fits(1)) ' nm'])
+disp(['fit y = ' num2str(bead_parameter_fits(2)) ' nm'])
+disp(['fit z = ' num2str(abs(bead_parameter_fits(3))) ' nm above the surface of the diamond'])
+disp(['fit polar angle = ' num2str(bead_parameter_fits(4)) ' radians'])
+disp(['fit azimuthal = ' num2str(bead_parameter_fits(5)) ' radians'])
+disp(['fit bead moment = ' num2str(bead_parameter_fits(6)/mT_nmcubed_per_femu) ' femu'])
 
 %% compare fit to real data
 
-% [fit_bead_fields] = generateBeadFields(bead_parameter_fits, ...
-%     X, Y, nv_depth);
 
 [fit_bead_fields] = simulate_bead_B_with_gradient_mask(bead_parameter_fits, X_fine, ...
     Y_fine, nvDepth, pixel_side_length, subdivisions_per_axis, gradient_value, mT_to_uT, ...
@@ -369,60 +300,6 @@ y_comp_fit = squeeze(fit_bead_fields_uT(:, :, 2));
 z_comp_fit = squeeze(fit_bead_fields_uT(:, :, 3));
 
 
-% figure()
-% 
-% subplot(1,3,1)
-% imagesc(x_comp)
-% title('fit Bx')
-% colorbar
-% colormap(linspecer)
-% pbaspect([1 1 1])
-% xticklabels({''})
-% yticklabels({''})
-% caxis([caxis_min caxis_max])
-% 
-% subplot(1,3,2)
-% imagesc(y_comp)
-% title('fit By')
-% colorbar
-% colormap(linspecer)
-% pbaspect([1 1 1])
-% xticklabels({''})
-% yticklabels({''})
-% caxis([caxis_min caxis_max])
-% 
-% subplot(1,3,3)
-% imagesc(z_comp)
-% title('fit Bz')
-% colorbar
-% colormap(linspecer)
-% pbaspect([1 1 1])
-% xticklabels({''})
-% yticklabels({''})
-% caxis([caxis_min caxis_max])
-
-% subplot(2,3,5)
-% imagesc((x_comp.^2 + y_comp.^2 + z_comp.^2).^(1/2))
-% title('fit B magnitude')
-% colorbar
-% colormap(linspecer)
-% pbaspect([1 1 1])
-% xticklabels({''})
-% yticklabels({''})
-% 
-% subplot(2,3,[3 6])
-% quiver3(X_unrot,Y_unrot,zeros(size(X)), x_comp , y_comp, z_comp)
-% xlim([0 20])
-% ylim([0 20])
-% pbaspect([1 1 1])
-% xticklabels({''})
-% yticklabels({''})
-
-% view(2)
-
-%% plot residuals 
-
-
 measured_bx = squeeze(measured_b_fields_uT(:, :, 1));
 measured_by = squeeze(measured_b_fields_uT(:, :, 2));
 measured_bz = squeeze(measured_b_fields_uT(:, :, 3));
@@ -434,6 +311,26 @@ measured_bz = squeeze(measured_b_fields_uT(:, :, 3));
 bx_to_plot = measured_bx;
 by_to_plot = measured_by;
 bz_to_plot = measured_bz;
+
+bx_residual = bx_to_plot-x_comp_fit;
+by_residual = by_to_plot-y_comp_fit;
+bz_residual = bz_to_plot-z_comp_fit;
+
+measured_field_precisions_uT = measured_field_precisions_mT *mT_to_uT;
+
+fit_residuals = (bx_residual./squeeze(measured_field_precisions_uT(:, :, 1))).^2 + ...
+                (by_residual./squeeze(measured_field_precisions_uT(:, :, 2))).^2;
+            
+disp(['fit residual of ' num2str(sum(fit_residuals(:)))])
+
+if using_turbobeads
+    caxis_lim = 2;
+else
+    caxis_lim = 6; %#ok<UNRCH>
+end
+
+caxis_min = -caxis_lim;
+caxis_max = caxis_lim;
 
 current_fig = figure(figure_tracking_number);
 figure_tracking_number = figure_tracking_number + 1;
@@ -472,7 +369,7 @@ yticklabels({''})
 caxis([caxis_min caxis_max])
 
 subplot(3,3,7)
-imagesc(bx_to_plot-x_comp_fit)
+imagesc(bx_residual)
 title('residual Bx')
 colorbar
 colormap(linspecer)
@@ -482,7 +379,7 @@ yticklabels({''})
 caxis([caxis_min caxis_max])
 
 subplot(3,3,8)
-imagesc(by_to_plot-y_comp_fit)
+imagesc(by_residual)
 title('residual By')
 colorbar
 colormap(linspecer)
@@ -492,7 +389,7 @@ yticklabels({''})
 caxis([caxis_min caxis_max])
 
 subplot(3,3,9)
-imagesc(bz_to_plot-z_comp_fit)
+imagesc(bz_residual)
 title('residual Bz')
 colorbar
 colormap(linspecer)
@@ -541,9 +438,11 @@ current_location = pwd;
 
 if fixed_z_fitting
 
-    modification_suffix = ['_z_val_fixed_' num2str(abs(bead_z))];
+    modification_suffix = ['_z_val_fixed_' num2str(abs(bead_z))]; %#ok<UNRCH>
 else
     modification_suffix = []; %#ok<UNRCH>
+    modification_suffix = ...
+        ['_gradient_mask_val_' num2str(1000*gradient_value) ' nT_per_nm'];
 end
 
 if linux_computer
@@ -567,17 +466,13 @@ if do_save
     
     
     fit_data.mask_lims = [mask_min_dist mask_max_dist];
-    
-    % full_save_folder_path = [prefix data_file_name slash 'bead_parameter_fits'];
+
     
     bead_parameter_fit_folder = 'bead_parameter_fit_outputs';
     
     if ~exist(bead_parameter_fit_folder, 'dir')
         mkdir(bead_parameter_fit_folder)
     end
-    
-    % save_path = [full_save_folder_path slash 'angle_' num2str(data.angle_space(angle_index)) modification_suffix ];
-    
     
     save_path = [bead_parameter_fit_folder slash 'bead_parameter_fits_' data_file_name '_angle_' num2str(data.angle_space(angle_index)) modification_suffix];
     save_path = replace(save_path, ' ', '_');
@@ -611,7 +506,7 @@ if do_save
     
     cd(current_location);
     
-    for i = 1:figure_tracking_number-1
+    for i = figure_tracking_number_start:figure_tracking_number-1
         
         current_fig = figure(i);
 

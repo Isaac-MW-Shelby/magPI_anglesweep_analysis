@@ -10,12 +10,36 @@ angle_sweep_location = 'B_field_maps.mat';
 
 angle_index_input = 1;
 
-bead_heights = 25:25:750;
+bead_height = 600;
+
+[bead_parameters] = ...
+        fitting_bead_parameters_from_b_fields_wrapper(angle_sweep_location,...
+        angle_index_input, bead_height);
+    
+%% sweeping over fixed z heights
+
+angle_sweep_location = 'B_field_maps.mat';
+
+bead_heights = 800;
 
 for bead_height = bead_heights
     [bead_parameters] = ...
         fitting_bead_parameters_from_b_fields_wrapper(angle_sweep_location,...
         angle_index_input, bead_height);
+end
+
+%% sweeping over gradient masking vals
+
+angle_sweep_location = 'B_field_maps.mat';
+
+gradient_vals = 24; % in nT/nm
+
+gradient_vals = gradient_vals / 1000; % converts to uT/nm
+
+for grad_val = gradient_vals
+    [bead_parameters] = ...
+        fitting_bead_parameters_from_b_fields_wrapper(angle_sweep_location,...
+        angle_index_input, grad_val);
 end
 
 
